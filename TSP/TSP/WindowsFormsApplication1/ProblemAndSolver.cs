@@ -406,11 +406,11 @@ namespace TSP
             private double[,] costMatrix;
 
             // Constructor
-            public BBState(ref ArrayList path, ref double lowerBound, ref double priority, ref double[,] costMatrix)
+            public BBState(ref ArrayList path, ref double lowerBound, ref double[,] costMatrix)
             {
                 this.path = path;
                 this.lowerBound = lowerBound;
-                this.priority = priority;
+                this.priority = double.MaxValue;
                 this.costMatrix = costMatrix;
             }
 
@@ -453,10 +453,96 @@ namespace TSP
         }
         #endregion
 
+        #region AdditionalMethods
         //***************************************************************************************************
-        //***************************************************************************************************
+        //******************************** Additional Methods ***********************************************
         //***************************************************************************************************
 
+        double calcKey(int remainingCities, double lowerBound)
+        {
+            if(remainingCities < 1)
+            {
+                return lowerBound;
+            }
+            else
+            {
+                double result = (lowerBound / (Cities.Length - remainingCities));
+                return result;
+            }
+        }
+
+        double createGreedyBSSF()
+        {
+            return 0;
+        }
+
+        void setUpMatrix(ref double[,] costMatrix, int parentIndex, int childIndex, ref double lowerBound)
+        {
+
+        }
+
+        double reduceMatrix(ref double[,] costMatrix)
+        {
+            double lowerBound = 0;
+
+            for(int row = 0; row < Cities.Length; row++)
+            {
+                double minValue = double.MaxValue;
+                for(int col = 0; col < Cities.Length; col++)
+                {
+                    if(costMatrix[row,col] < minValue)
+                    {
+                        minValue = costMatrix[row, col];
+                    }
+                }
+
+                if(minValue != 0 && minValue != double.MaxValue)
+                {
+                    lowerBound += minValue;
+
+                    for(int col = 0; col < Cities.Length; col++)
+                    {
+                        if(costMatrix[row,col] != double.MaxValue)
+                        {
+                            costMatrix[row, col] -= minValue;
+                        }
+                    }
+                }
+            }
+
+            return lowerBound;
+        }
+
+        BBState createState()
+        {
+            double[,] initialCostMatrix = new double[Cities.Length, Cities.Length];
+
+            for(int i = 0; i < Cities.Length; i++)
+            {
+                for(int j = 0; j < Cities.Length; j++)
+                {
+                    if(i == j)
+                    {
+                        initialCostMatrix[i, j] = double.MaxValue;
+                    }
+                    else
+                    {
+                        initialCostMatrix[i, j] = Cities[i].costToGetTo(Cities[j]);
+                    }
+                }
+            }
+
+            ArrayList path = new ArrayList();
+            path.Add(Cities[0]);
+
+            double lowerBound = reduceMatrix(ref initialCostMatrix);
+
+            BBState state = new BBState(ref path, ref lowerBound, ref initialCostMatrix);
+
+            return state;
+        }
+        #endregion
+        
         /////////////////////////////////////////////////////////////////////////////////////////////
         // These additional solver methods will be implemented as part of the group project.
         ////////////////////////////////////////////////////////////////////////////////////////////
