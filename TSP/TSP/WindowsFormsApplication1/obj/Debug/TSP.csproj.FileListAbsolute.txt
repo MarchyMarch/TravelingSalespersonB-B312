@@ -17,3 +17,12 @@ C:\Users\Kyle March\Documents\School\Fall 2017\CS 312\Projects\05\TravelingSales
 C:\Users\Kyle March\Documents\School\Fall 2017\CS 312\Projects\05\TravelingSalespersonB-B312\TSP\TSP\WindowsFormsApplication1\obj\Debug\TSP.csproj.CoreCompileInputs.cache
 C:\Users\Kyle March\Documents\School\Fall 2017\CS 312\Projects\05\TravelingSalespersonB-B312\TSP\TSP\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.exe
 C:\Users\Kyle March\Documents\School\Fall 2017\CS 312\Projects\05\TravelingSalespersonB-B312\TSP\TSP\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.pdb
+D:\Documents\School\Fall 2017\CS312\Projects\05\TravelingSalespersonB-B312\TSP\TSP\WindowsFormsApplication1\bin\Debug\WindowsFormsApplication1.exe.config
+D:\Documents\School\Fall 2017\CS312\Projects\05\TravelingSalespersonB-B312\TSP\TSP\WindowsFormsApplication1\bin\Debug\WindowsFormsApplication1.exe
+D:\Documents\School\Fall 2017\CS312\Projects\05\TravelingSalespersonB-B312\TSP\TSP\WindowsFormsApplication1\bin\Debug\WindowsFormsApplication1.pdb
+D:\Documents\School\Fall 2017\CS312\Projects\05\TravelingSalespersonB-B312\TSP\TSP\WindowsFormsApplication1\obj\Debug\TSP.csprojResolveAssemblyReference.cache
+D:\Documents\School\Fall 2017\CS312\Projects\05\TravelingSalespersonB-B312\TSP\TSP\WindowsFormsApplication1\obj\Debug\TSP.mainform.resources
+D:\Documents\School\Fall 2017\CS312\Projects\05\TravelingSalespersonB-B312\TSP\TSP\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.Properties.Resources.resources
+D:\Documents\School\Fall 2017\CS312\Projects\05\TravelingSalespersonB-B312\TSP\TSP\WindowsFormsApplication1\obj\Debug\TSP.csproj.GenerateResource.Cache
+D:\Documents\School\Fall 2017\CS312\Projects\05\TravelingSalespersonB-B312\TSP\TSP\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.exe
+D:\Documents\School\Fall 2017\CS312\Projects\05\TravelingSalespersonB-B312\TSP\TSP\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.pdb

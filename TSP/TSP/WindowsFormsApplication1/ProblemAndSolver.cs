@@ -370,9 +370,18 @@ namespace TSP
             return results;
         }
 
+        #region B&Bsolution
+        //***************************************************************************************************
+        //*********************************** Branch and Bound **********************************************
+        //***************************************************************************************************
+
         /// <summary>
         /// performs a Branch and Bound search of the state space of partial tours
         /// stops when time limit expires and uses BSSF as solution
+        /// 
+        /// Time Complexity:
+        /// Space Complexity:
+        /// 
         /// </summary>
         /// <returns>results array for GUI that contains three ints: cost of solution, time spent to find solution, number of solutions found during search (not counting initial BSSF estimate)</returns>
         public string[] bBSolveProblem()
@@ -479,7 +488,7 @@ namespace TSP
 
             return results;
         }
-
+        #endregion
 
         #region BBStateClass
         //***************************************************************************************************
@@ -488,6 +497,9 @@ namespace TSP
 
         /// <summary>
         /// This class tracks the state for each node along the path in the branch and bound algorithm
+        /// Time Complexity:  All methods are O(1)
+        /// Space Complexity: O(N^2) because each new state has space allocated for the costMatrix which has
+        /// a space of an N by N matrix.
         /// </summary>
         public class BBState
         {
@@ -544,147 +556,6 @@ namespace TSP
         }
         #endregion
 
-        #region AdditionalMethods
-        //***************************************************************************************************
-        //******************************** Additional Methods ***********************************************
-        //***************************************************************************************************
-
-        double calcKey(int remainingCities, double lowerBound)
-        {
-            if(remainingCities < 1)
-            {
-                return lowerBound;
-            }
-            else
-            {
-                double result = (lowerBound / (Cities.Length - remainingCities));
-                return result;
-            }
-        }
-
-        double createGreedyBSSF()
-        {
-            Route = new ArrayList();
-            Route.Add(Cities[0]);
-            int curCityIndex = 0;
-
-            while(Route.Count < Cities.Length)
-            {
-                double minValue = double.MaxValue;
-                int minIndex = 0;
-
-                for(int i = 0; i < Cities.Length; i++)
-                {
-                    if(curCityIndex != i)
-                    {
-                        if(!Route.Contains(Cities[i]))
-                        {
-                            double compareValue = Cities[curCityIndex].costToGetTo(Cities[i]);
-
-                            if(compareValue < minValue)
-                            {
-                                if(Route.Count == Cities.Length-1 && Cities[i].costToGetTo(Cities[0]) == double.MaxValue)
-                                {
-                                    continue;
-                                }
-
-                                minValue = compareValue;
-                                minIndex = i;
-                            }
-                        }
-                    }
-                }
-
-                curCityIndex = minIndex;
-                Route.Add(Cities[curCityIndex]);
-            }
-
-            bssf = new TSPSolution(Route);
-            return bssf.costOfRoute();
-        }
-
-        void setUpMatrix(ref double[,] costMatrix, int parentIndex, int childIndex, ref double lowerBound)
-        {
-            if(costMatrix[parentIndex, childIndex] != double.MaxValue)
-            {
-                lowerBound += costMatrix[parentIndex, childIndex];
-            }
-
-            for(int row = 0; row < Cities.Length; row++)
-            {
-                costMatrix[row, childIndex] = double.MaxValue;
-            }
-
-            for(int col = 0; col < Cities.Length; col++)
-            {
-                costMatrix[parentIndex, col] = double.MaxValue;
-            }
-
-            costMatrix[parentIndex, childIndex] = double.MaxValue;
-        }
-
-        double reduceMatrix(ref double[,] costMatrix)
-        {
-            double lowerBound = 0;
-
-            for(int row = 0; row < Cities.Length; row++)
-            {
-                double minValue = double.MaxValue;
-                for(int col = 0; col < Cities.Length; col++)
-                {
-                    if(costMatrix[row,col] < minValue)
-                    {
-                        minValue = costMatrix[row, col];
-                    }
-                }
-
-                if(minValue != 0 && minValue != double.MaxValue)
-                {
-                    lowerBound += minValue;
-
-                    for(int col = 0; col < Cities.Length; col++)
-                    {
-                        if(costMatrix[row,col] != double.MaxValue)
-                        {
-                            costMatrix[row, col] -= minValue;
-                        }
-                    }
-                }
-            }
-
-            return lowerBound;
-        }
-
-        BBState createState()
-        {
-            double[,] initialCostMatrix = new double[Cities.Length, Cities.Length];
-
-            for(int i = 0; i < Cities.Length; i++)
-            {
-                for(int j = 0; j < Cities.Length; j++)
-                {
-                    if(i == j)
-                    {
-                        initialCostMatrix[i, j] = double.MaxValue;
-                    }
-                    else
-                    {
-                        initialCostMatrix[i, j] = Cities[i].costToGetTo(Cities[j]);
-                    }
-                }
-            }
-
-            ArrayList path = new ArrayList();
-            path.Add(Cities[0]);
-
-            double lowerBound = reduceMatrix(ref initialCostMatrix);
-
-            BBState state = new BBState(ref path, ref lowerBound, ref initialCostMatrix);
-
-            return state;
-        }
-        #endregion
-
         #region PriorityQueue
         //***************************************************************************************************
         //************************************ Priority Queue ***********************************************
@@ -711,7 +582,7 @@ namespace TSP
 
             public double getMinLowerBound()
             {
-                return states[0].getLowerBound();
+                return states[1].getLowerBound();
             }
 
             public int getMaxNumber()
@@ -776,7 +647,191 @@ namespace TSP
                 }
             }
         }
+        #endregion
 
+        #region AdditionalMethods
+        //***************************************************************************************************
+        //******************************** Additional Methods ***********************************************
+        //***************************************************************************************************
+
+
+        /// <summary>
+        /// Makes a key to a state for use in the priority queue
+        /// Time Complexity: O(1) because there are only if statements and mathmatical computations
+        /// Space Complexity: O(1) there is nothing that is stored through this method
+        /// </summary>
+        /// <param name="remainingCities">Cities Remaining to be visited</param>
+        /// <param name="lowerBound">The current low cost</param>
+        /// <returns>The key to the set priority</returns>
+        double calcKey(int remainingCities, double lowerBound)
+        {
+            if (remainingCities < 1)
+            {
+                return lowerBound;
+            }
+            else
+            {
+                double result = (lowerBound / (Cities.Length - remainingCities));
+                return result;
+            }
+        }
+
+
+        /// <summary>
+        /// Helps to make an initial BSSF that is greedy
+        /// Time Complexity: This method itterates through all the cities and for each city it itterates
+        /// through all the cities again, so it has a time complexity of O(N^2)
+        /// Space Complexity: This method makes an array list of all the cities so the space complexity
+        /// is O(N)
+        /// </summary>
+        /// <returns>Initial BSSF value</returns>
+        double createGreedyBSSF()
+        {
+            Route = new ArrayList();
+            Route.Add(Cities[0]);
+            int curCityIndex = 0;
+
+            while (Route.Count < Cities.Length)
+            {
+                double minValue = double.MaxValue;
+                int minIndex = 0;
+
+                for (int i = 0; i < Cities.Length; i++)
+                {
+                    if (curCityIndex != i)
+                    {
+                        if (!Route.Contains(Cities[i]))
+                        {
+                            double compareValue = Cities[curCityIndex].costToGetTo(Cities[i]);
+
+                            if (compareValue < minValue)
+                            {
+                                if (Route.Count == Cities.Length - 1 && Cities[i].costToGetTo(Cities[0]) == double.MaxValue)
+                                {
+                                    continue;
+                                }
+
+                                minValue = compareValue;
+                                minIndex = i;
+                            }
+                        }
+                    }
+                }
+
+                curCityIndex = minIndex;
+                Route.Add(Cities[curCityIndex]);
+            }
+
+            bssf = new TSPSolution(Route);
+            return bssf.costOfRoute();
+        }
+
+        /// <summary>
+        /// Modifies the lowerBound and then modifies the rows and columns of the cost matrix
+        /// Time Complexity: because we only modify the row and column the time complexity is
+        /// O(N) where N is the length of the row or column
+        /// Space Complexity: O(1) everything that is modified is done so by reference so
+        /// there is no new allocation of memory
+        /// </summary>
+        /// <param name="costMatrix">the given cost matrix</param>
+        /// <param name="parentIndex">the index of parent city</param>
+        /// <param name="childIndex">the index of the next city</param>
+        /// <param name="lowerBound">current lower bound</param>
+        void setUpMatrix(ref double[,] costMatrix, int parentIndex, int childIndex, ref double lowerBound)
+        {
+            if (costMatrix[parentIndex, childIndex] != double.MaxValue)
+            {
+                lowerBound += costMatrix[parentIndex, childIndex];
+            }
+
+            for (int row = 0; row < Cities.Length; row++)
+            {
+                costMatrix[row, childIndex] = double.MaxValue;
+            }
+
+            for (int col = 0; col < Cities.Length; col++)
+            {
+                costMatrix[parentIndex, col] = double.MaxValue;
+            }
+
+            costMatrix[parentIndex, childIndex] = double.MaxValue;
+        }
+
+        /// <summary>
+        /// reduces the cost matrix and calculate lower bound
+        /// Time Complexity: It itterates through the cost matrix, size N by N, twice it has a time 
+        /// complexity of O(N^2)
+        /// Space Complexity: There is no new allocation of space and the modified matrix is passed
+        /// in by reference so the complexity is O(1)
+        /// </summary>
+        /// <param name="costMatrix">the matrix to reduce</param>
+        /// <returns>the modified lower bound</returns>
+        double reduceMatrix(ref double[,] costMatrix)
+        {
+            double lowerBound = 0;
+
+            for (int row = 0; row < Cities.Length; row++)
+            {
+                double minValue = double.MaxValue;
+                for (int col = 0; col < Cities.Length; col++)
+                {
+                    if (costMatrix[row, col] < minValue)
+                    {
+                        minValue = costMatrix[row, col];
+                    }
+                }
+
+                if (minValue != 0 && minValue != double.MaxValue)
+                {
+                    lowerBound += minValue;
+
+                    for (int col = 0; col < Cities.Length; col++)
+                    {
+                        if (costMatrix[row, col] != double.MaxValue)
+                        {
+                            costMatrix[row, col] -= minValue;
+                        }
+                    }
+                }
+            }
+
+            return lowerBound;
+        }
+
+        /// <summary>
+        /// creates a list for the first city in the list
+        /// Time Complexity: O(N^2) because it itterates through the cities twice
+        /// Space Complexity: Because spaceis allocated for the matrix space complexity is O(N^2)
+        /// </summary>
+        /// <returns></returns>
+        BBState createState()
+        {
+            double[,] initialCostMatrix = new double[Cities.Length, Cities.Length];
+
+            for (int i = 0; i < Cities.Length; i++)
+            {
+                for (int j = 0; j < Cities.Length; j++)
+                {
+                    if (i == j)
+                    {
+                        initialCostMatrix[i, j] = double.MaxValue;
+                    }
+                    else
+                    {
+                        initialCostMatrix[i, j] = Cities[i].costToGetTo(Cities[j]);
+                    }
+                }
+            }
+
+            ArrayList path = new ArrayList();
+            path.Add(Cities[0]);
+
+            double lowerBound = reduceMatrix(ref initialCostMatrix);
+
+            BBState state = new BBState(ref path, ref lowerBound, ref initialCostMatrix);
+
+            return state;
+        }
         #endregion
 
         /////////////////////////////////////////////////////////////////////////////////////////////
