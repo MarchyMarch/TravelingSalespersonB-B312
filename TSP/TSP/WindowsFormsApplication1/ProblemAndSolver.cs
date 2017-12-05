@@ -378,10 +378,10 @@ namespace TSP
         /// <summary>
         /// performs a Branch and Bound search of the state space of partial tours
         /// stops when time limit expires and uses BSSF as solution
-        /// 
-        /// Time Complexity:
-        /// Space Complexity:
-        /// 
+        /// Time Complexity: Because of the while loop, which is the meat of the solution, the time complexity
+        /// is O(2^N * N^2) 
+        /// Space Complexity: Like the time complexity the main memory allocation happens in the while loop 
+        /// and also has a complexity of O(2^N * N^2)
         /// </summary>
         /// <returns>results array for GUI that contains three ints: cost of solution, 
         /// time spent to find solution, number of solutions found during search 
@@ -401,33 +401,50 @@ namespace TSP
             DateTime end = start.AddSeconds(time_limit / 1000);
 
             // create the initial state at the start city then set its priority
+            // the createState() method makes this part a time complexity of O(N^2)
             BBState state = createState();
             statesCreated++;
             state.setPriority(calcKey(remainingCities - 1, state.getLowerBound()));
 
             // creat the bssf with a greedy approach
+            // Making a greedy BSSF gives this part a time complexity of O(N^2)
+            // as well as a space complexity of O(N)
             double bssfBound = createGreedyBSSF();
 
             // makes a new priority queue and adds the start city
+            // this block only allocates space in makeQueue which is O(1,000,000)
             PriorityQueue queue = new PriorityQueue();
             queue.makeQueue(Cities.Length);
             queue.insert(state);
 
+            // This is the implementation of the branch and bound and finds the optimal solution
+            // unless the time limit is met.  Here time complexity is terrible becasue it is 
+            // O(2^N * N^2).  it itterates through the while loop O(2^N) and for each state it
+            // reduces the matrix with a time complexity of O(N^2). For space complexity each state 
+            // makes an N by N matrix giving it a space comlexity of O(N^2) for each matrix and it
+            // also makes 2^N states so its overall space complexity is O(2^N * N^2)
             while(!queue.isEmpty() && DateTime.Now < end && queue.getMinLowerBound() != bssfBound)
             {
+                // get the next city
                 BBState curState = queue.deleteMin();
 
+                // check to see if it has a better bssf
                 if(curState.getLowerBound() < bssfBound)
                 {
+                    // branch from the state to explore its children
                     for(int i = 0; i < Cities.Length; i++)
                     {
                         if (DateTime.Now >= end) break;
 
+                        // if we have visited the city we skip it
                         if (curState.getPath().Contains(Cities[i])) continue;
 
+                        // start to make a new state
                         double[,] curCostMatrix = curState.getCostMatrix();
                         double[,] newCostMatrix = new double[Cities.Length, Cities.Length];
 
+                        // fill the new matrix
+                        // this is O(N^2)
                         for(int j = 0; j < Cities.Length; j++)
                         {
                             for(int k = 0; k < Cities.Length; k++)
@@ -435,7 +452,6 @@ namespace TSP
                                 newCostMatrix[j, k] = curCostMatrix[j, k];
                             }
                         }
-
                         City lastCityInCurState = (City)curState.getPath()[curState.getPath().Count - 1];
                         double curLowerBound = curState.getLowerBound();
                         setUpMatrix(ref newCostMatrix, Array.IndexOf(Cities, lastCityInCurState), i, ref curLowerBound);
@@ -450,15 +466,18 @@ namespace TSP
                         }
                         newPath.Add(Cities[i]);
 
+                        // makes new state
                         BBState childState = new BBState(ref newPath, ref newLowerBound, ref newCostMatrix);
                         statesCreated++;
 
+                        // don't explore child states that larger than the bssf
                         if(childState.getLowerBound() < bssfBound)
                         {
                             City startCity = (City)childState.getPath()[0];
                             City finalCity = (City)childState.getPath()[childState.getPath().Count - 1];
                             double costToReturn = finalCity.costToGetTo(startCity);
 
+                            // check to see if it goes to the start city
                             if(childState.getPath().Count == Cities.Length && costToReturn != double.MaxValue)
                             {
                                 childState.setLowerBound(childState.getLowerBound() + costToReturn);
@@ -469,6 +488,7 @@ namespace TSP
                             }
                             else
                             {
+                                // set the priority and add it to the queue
                                 remainingCities = Cities.Length - childState.getPath().Count;
                                 childState.setPriority(calcKey(remainingCities, childState.getLowerBound()));
                                 queue.insert(childState);
@@ -510,6 +530,9 @@ namespace TSP
         /// Time Complexity:  All methods are O(1)
         /// Space Complexity: O(N^2) because each new state has space allocated for the costMatrix which has
         /// a space of an N by N matrix.
+        /// The data structures i used were an array list to keep track of the path, for the cost matrix I 
+        /// used a 2d array of doubles, and the other private members i used a double for large cases. Most
+        /// types are primitive because Dr. Ventura said they are faster.
         /// </summary>
         public class BBState
         {
@@ -628,7 +651,7 @@ namespace TSP
             /// Time Complexity: the time complexity for this is O(logN) where N is the height of the tree
             /// Space Complexity: O(1) because there are no new space allocations
             /// </summary>
-            /// <returns></returns>
+            /// <returns>The minimum BBState/optimal city</returns>
             public BBState deleteMin()
             {
                 BBState minState = states[1];
@@ -716,7 +739,7 @@ namespace TSP
 
 
         /// <summary>
-        /// Helps to make an initial BSSF that is greedy
+        /// Helps to make an initial BSSF
         /// Time Complexity: This method itterates through all the cities and for each city it itterates
         /// through all the cities again, so it has a time complexity of O(N^2)
         /// Space Complexity: This method makes an array list of all the cities so the space complexity
