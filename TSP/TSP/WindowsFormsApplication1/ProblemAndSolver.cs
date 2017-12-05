@@ -383,25 +383,32 @@ namespace TSP
         /// Space Complexity:
         /// 
         /// </summary>
-        /// <returns>results array for GUI that contains three ints: cost of solution, time spent to find solution, number of solutions found during search (not counting initial BSSF estimate)</returns>
+        /// <returns>results array for GUI that contains three ints: cost of solution, 
+        /// time spent to find solution, number of solutions found during search 
+        /// (not counting initial BSSF estimate)</returns>
         public string[] bBSolveProblem()
         {
             string[] results = new string[3];
 
+            // numbers we are looking for and help with solving the problem
             int remainingCities = Cities.Length;
             int numOfSolutions = 0;
             int statesCreated = 0;
             int statesNotExplored = 0;
 
+            // the start of when the algorithm was called and the end being the added time limit
             DateTime start = DateTime.Now;
             DateTime end = start.AddSeconds(time_limit / 1000);
 
+            // create the initial state at the start city then set its priority
             BBState state = createState();
             statesCreated++;
             state.setPriority(calcKey(remainingCities - 1, state.getLowerBound()));
 
+            // creat the bssf with a greedy approach
             double bssfBound = createGreedyBSSF();
 
+            // makes a new priority queue and adds the start city
             PriorityQueue queue = new PriorityQueue();
             queue.makeQueue(Cities.Length);
             queue.insert(state);
@@ -476,12 +483,15 @@ namespace TSP
                 curState = null;
             }
 
+            // add the queue length in case the algorithm times out
             statesNotExplored += queue.getCount();
 
+            // find how long it took to find the optimal route and set the span to seconds
             end = DateTime.Now;
             TimeSpan timeSpan = end - start;
             double spanSeconds = timeSpan.TotalSeconds;
 
+            // convert all the important variables that need to be returned to strings and return them
             results[COST] = System.Convert.ToString(bssf.costOfRoute());
             results[TIME] = System.Convert.ToString(spanSeconds);
             results[COUNT] = System.Convert.ToString(numOfSolutions);
@@ -613,7 +623,12 @@ namespace TSP
                 maxNumber = 0;
             }
 
-
+            /// <summary>
+            /// Here we delete the minimum state and then adjust the tree accordingly, similar to lab 03
+            /// Time Complexity: the time complexity for this is O(logN) where N is the height of the tree
+            /// Space Complexity: O(1) because there are no new space allocations
+            /// </summary>
+            /// <returns></returns>
             public BBState deleteMin()
             {
                 BBState minState = states[1];
@@ -646,6 +661,13 @@ namespace TSP
                 return minState;
             }
 
+            /// <summary>
+            /// This inserts the new state at the bottom of the tree and then it bubbles up to the correct place
+            /// Time Complexity: the worse case scenario is if the added state is the root of the tree so the 
+            /// time complexity is O(logN) where N is the height of the tree
+            /// Space Complexity: because there is now new allocation of space the complexity is O(1)
+            /// </summary>
+            /// <param name="state">The state to be added to the queue</param>
             public void insert(BBState state)
             {
                 count++;
