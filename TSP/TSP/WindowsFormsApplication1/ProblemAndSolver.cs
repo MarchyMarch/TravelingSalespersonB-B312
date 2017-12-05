@@ -379,7 +379,21 @@ namespace TSP
         {
             string[] results = new string[3];
 
-            // TODO: Add your implementation for a branch and bound solver here.
+            int remainingCities = Cities.Length;
+            int numOfSolutions = 0;
+            int statesCreated = 0;
+            int statesNotExplored = 0;
+
+            DateTime start = DateTime.Now;
+            DateTime end = start.AddSeconds(time_limit / 1000);
+
+            BBState state = createState();
+            statesCreated++;
+            state.setPriority(calcKey(remainingCities - 1, state.getLowerBound()));
+
+            double bssfBound = createGreedyBSSF();
+
+
 
 
             results[COST] = "not implemented";    // load results into array here, replacing these dummy values
@@ -473,12 +487,63 @@ namespace TSP
 
         double createGreedyBSSF()
         {
-            return 0;
+            Route = new ArrayList();
+            Route.Add(Cities[0]);
+            int curCityIndex = 0;
+
+            while(Route.Count < Cities.Length)
+            {
+                double minValue = double.MaxValue;
+                int minIndex = 0;
+
+                for(int i = 0; i < Cities.Length; i++)
+                {
+                    if(curCityIndex != i)
+                    {
+                        if(!Route.Contains(Cities[i]))
+                        {
+                            double compareValue = Cities[curCityIndex].costToGetTo(Cities[i]);
+
+                            if(compareValue < minValue)
+                            {
+                                if(Route.Count == Cities.Length-1 && Cities[i].costToGetTo(Cities[0]) == double.MaxValue)
+                                {
+                                    continue;
+                                }
+
+                                minValue = compareValue;
+                                minIndex = i;
+                            }
+                        }
+                    }
+                }
+
+                curCityIndex = minIndex;
+                Route.Add(Cities[curCityIndex]);
+            }
+
+            bssf = new TSPSolution(Route);
+            return bssf.costOfRoute();
         }
 
         void setUpMatrix(ref double[,] costMatrix, int parentIndex, int childIndex, ref double lowerBound)
         {
+            if(costMatrix[parentIndex, childIndex] != double.MaxValue)
+            {
+                lowerBound += costMatrix[parentIndex, childIndex];
+            }
 
+            for(int row = 0; row < Cities.Length; row++)
+            {
+                costMatrix[row, childIndex] = double.MaxValue;
+            }
+
+            for(int col = 0; col < Cities.Length; col++)
+            {
+                costMatrix[parentIndex, col] = double.MaxValue;
+            }
+
+            costMatrix[parentIndex, childIndex] = double.MaxValue;
         }
 
         double reduceMatrix(ref double[,] costMatrix)
@@ -542,7 +607,101 @@ namespace TSP
             return state;
         }
         #endregion
-        
+
+        #region PriorityQueue
+        //***************************************************************************************************
+        //************************************ Priority Queue ***********************************************
+        //***************************************************************************************************
+
+        public sealed class PriorityQueue
+        {
+            private int capacity;
+            private int count;
+            private int maxNumber;
+            private BBState[] states;
+
+            public PriorityQueue() { }
+
+            public bool isEmpty()
+            {
+                return count == 0;
+            }
+
+            public int getCount()
+            {
+                return count;
+            }
+
+            public double getMinLowerBound()
+            {
+                return states[0].getLowerBound();
+            }
+
+            public int getMaxNumber()
+            {
+                return maxNumber;
+            }
+
+            public void makeQueue(int numNodes)
+            {
+                states = new BBState[1000000];
+                capacity = numNodes;
+                count = 0;
+                maxNumber = 0;
+            }
+
+            public BBState deleteMin()
+            {
+                BBState minState = states[1];
+
+                states[1] = states[count];
+                count--;
+
+                int whileItterator = 1;
+
+                while(whileItterator <= count)
+                {
+                    int leftChildIndex = whileItterator * 2;
+                    if (leftChildIndex > count) break;
+
+                    if(leftChildIndex+1 <= count && states[leftChildIndex +1].getPriority() < states[leftChildIndex].getPriority())
+                    {
+                        leftChildIndex++;
+                    }
+
+                    if(states[whileItterator].getPriority() > states[leftChildIndex].getPriority())
+                    {
+                        BBState tempState = states[leftChildIndex];
+                        states[leftChildIndex] = states[whileItterator];
+                        states[whileItterator] = tempState;
+                    }
+
+                    whileItterator = leftChildIndex;
+                }
+
+                return minState;
+            }
+
+            public void insert(BBState state)
+            {
+                count++;
+                states[count] = state;
+                if (count > maxNumber) maxNumber = count;
+
+                int whileIterrator = count;
+                while(whileIterrator > 1 && states[whileIterrator/2].getPriority() > states[whileIterrator].getPriority())
+                {
+                    BBState tempState = states[whileIterrator / 2];
+                    states[whileIterrator / 2] = states[whileIterrator];
+                    states[whileIterrator] = tempState;
+
+                    whileIterrator = whileIterrator / 2;
+                }
+            }
+        }
+
+        #endregion
+
         /////////////////////////////////////////////////////////////////////////////////////////////
         // These additional solver methods will be implemented as part of the group project.
         ////////////////////////////////////////////////////////////////////////////////////////////
