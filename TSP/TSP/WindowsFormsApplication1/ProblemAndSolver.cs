@@ -393,12 +393,89 @@ namespace TSP
 
             double bssfBound = createGreedyBSSF();
 
+            PriorityQueue queue = new PriorityQueue();
+            queue.makeQueue(Cities.Length);
+            queue.insert(state);
 
+            while(!queue.isEmpty() && DateTime.Now < end && queue.getMinLowerBound() != bssfBound)
+            {
+                BBState curState = queue.deleteMin();
 
+                if(curState.getLowerBound() < bssfBound)
+                {
+                    for(int i = 0; i < Cities.Length; i++)
+                    {
+                        if (DateTime.Now >= end) break;
 
-            results[COST] = "not implemented";    // load results into array here, replacing these dummy values
-            results[TIME] = "-1";
-            results[COUNT] = "-1";
+                        if (curState.getPath().Contains(Cities[i])) continue;
+
+                        double[,] curCostMatrix = curState.getCostMatrix();
+                        double[,] newCostMatrix = new double[Cities.Length, Cities.Length];
+
+                        for(int j = 0; j < Cities.Length; j++)
+                        {
+                            for(int k = 0; k < Cities.Length; k++)
+                            {
+                                newCostMatrix[j, k] = curCostMatrix[j, k];
+                            }
+                        }
+
+                        City lastCityInCurState = (City)curState.getPath()[curState.getPath().Count - 1];
+                        double curLowerBound = curState.getLowerBound();
+                        setUpMatrix(ref newCostMatrix, Array.IndexOf(Cities, lastCityInCurState), i, ref curLowerBound);
+                        double newLowerBound = curLowerBound + reduceMatrix(ref newCostMatrix);
+
+                        ArrayList curPath = curState.getPath();
+                        ArrayList newPath = new ArrayList();
+
+                        foreach(City city in curPath)
+                        {
+                            newPath.Add(city);
+                        }
+                        newPath.Add(Cities[i]);
+
+                        BBState childState = new BBState(ref newPath, ref newLowerBound, ref newCostMatrix);
+                        statesCreated++;
+
+                        if(childState.getLowerBound() < bssfBound)
+                        {
+                            City startCity = (City)childState.getPath()[0];
+                            City finalCity = (City)childState.getPath()[childState.getPath().Count - 1];
+                            double costToReturn = finalCity.costToGetTo(startCity);
+
+                            if(childState.getPath().Count == Cities.Length && costToReturn != double.MaxValue)
+                            {
+                                childState.setLowerBound(childState.getLowerBound() + costToReturn);
+                                bssf = new TSPSolution(childState.getPath());
+                                bssfBound = bssf.costOfRoute();
+                                numOfSolutions++;
+                                statesNotExplored++;
+                            }
+                            else
+                            {
+                                remainingCities = Cities.Length - childState.getPath().Count;
+                                childState.setPriority(calcKey(remainingCities, childState.getLowerBound()));
+                                queue.insert(childState);
+                            }
+                        }
+                        else
+                        {
+                            statesNotExplored++;
+                        }
+                    }
+                }
+                curState = null;
+            }
+
+            statesNotExplored += queue.getCount();
+
+            end = DateTime.Now;
+            TimeSpan timeSpan = end - start;
+            double spanSeconds = timeSpan.TotalSeconds;
+
+            results[COST] = System.Convert.ToString(bssf.costOfRoute());
+            results[TIME] = System.Convert.ToString(spanSeconds);
+            results[COUNT] = System.Convert.ToString(numOfSolutions);
 
             return results;
         }
