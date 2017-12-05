@@ -561,6 +561,12 @@ namespace TSP
         //************************************ Priority Queue ***********************************************
         //***************************************************************************************************
 
+        /// <summary>
+        /// Modified version of the priority queue from lab 03.  It uses an array to keep track of the states
+        /// and uses the bubbling method to sort the array by highest priority.  The priority key is dependent 
+        /// on both the lower bound and the cities we have visitied.  This shows which cities are closer and
+        /// where we are to visit next
+        /// </summary>
         public sealed class PriorityQueue
         {
             private int capacity;
@@ -569,12 +575,14 @@ namespace TSP
             private BBState[] states;
 
             public PriorityQueue() { }
-
+            
+            // Checks if queue is empty
             public bool isEmpty()
             {
                 return count == 0;
             }
 
+            // Getters
             public int getCount()
             {
                 return count;
@@ -590,6 +598,13 @@ namespace TSP
                 return maxNumber;
             }
 
+            /// <summary>
+            /// makes the initial queue.  It initializes the states array to a million then sets the capacity
+            /// to the number of nodes, which is the number of cities.
+            /// Time Complexity: O(1), there are no loops or itterations, just assignments
+            /// Space Complexity: 1,000,000 because thats what is initialized for the queue, it is a constant
+            /// </summary>
+            /// <param name="numNodes">Equal to the number of cities to explore</param>
             public void makeQueue(int numNodes)
             {
                 states = new BBState[1000000];
@@ -597,6 +612,7 @@ namespace TSP
                 count = 0;
                 maxNumber = 0;
             }
+
 
             public BBState deleteMin()
             {
